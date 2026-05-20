@@ -6,10 +6,12 @@ const STORAGE_KEY = "pr-board-settings:v1";
 
 export interface Settings {
   orgs: string[];
+  showDone: boolean;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   orgs: ["MinutHQ"],
+  showDone: true,
 };
 
 function read(): Settings {
@@ -20,6 +22,10 @@ function read(): Settings {
     const parsed = JSON.parse(raw) as Partial<Settings>;
     return {
       orgs: Array.isArray(parsed.orgs) ? parsed.orgs : DEFAULT_SETTINGS.orgs,
+      showDone:
+        typeof parsed.showDone === "boolean"
+          ? parsed.showDone
+          : DEFAULT_SETTINGS.showDone,
     };
   } catch {
     return DEFAULT_SETTINGS;

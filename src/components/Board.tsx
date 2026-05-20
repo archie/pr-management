@@ -4,6 +4,7 @@ import type { BoardData, ColumnId, PR } from "@/lib/types";
 import { COLUMN_LABEL, COLUMN_ORDER } from "@/lib/types";
 import { PRCard } from "./PRCard";
 import clsx from "clsx";
+import { useMemo } from "react";
 
 function bucketize(prs: PR[]) {
   // bucket[repo][column] = PR[]
@@ -31,11 +32,27 @@ function bucketize(prs: PR[]) {
   return map;
 }
 
-export function Board({ data }: { data: BoardData }) {
+export function Board({
+  data,
+  hiddenColumns,
+}: {
+  data: BoardData;
+  hiddenColumns?: ColumnId[];
+}) {
+  const visibleColumns = useMemo(
+    () => COLUMN_ORDER.filter((c) => !hiddenColumns?.includes(c)),
+    [hiddenColumns],
+  );
+  const visibleRepos = useMemo(() => {
+    const hidden = new Set(hiddenColumns ?? []);
+    const reposWithVisiblePRs = new Set(
+      data.prs.filter((p) => !hidden.has(p.column)).map((p) => p.repo),
+    );
+    return data.repos.filter((r) => reposWithVisiblePRs.has(r));
+  }, [data, hiddenColumns]);
   const buckets = bucketize(data.prs);
-  const repos = data.repos;
 
-  if (repos.length === 0) {
+  if (visibleRepos.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white p-8 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
         No pull requests found. Try adjusting orgs in settings.
@@ -48,14 +65,14 @@ export function Board({ data }: { data: BoardData }) {
       <div
         className="grid min-w-[1400px] gap-3"
         style={{
-          gridTemplateColumns: `200px repeat(${COLUMN_ORDER.length}, minmax(220px, 1fr))`,
+          gridTemplateColumns: `200px repeat(${visibleColumns.length}, minmax(220px, 1fr))`,
         }}
       >
         {/* header row */}
         <div className="sticky top-0 z-10 bg-neutral-50 px-2 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400">
           Repo
         </div>
-        {COLUMN_ORDER.map((col) => (
+        {visibleColumns.map((col) => (
           <div
             key={col}
             className="sticky top-0 z-10 bg-neutral-50 px-2 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400"
@@ -65,10 +82,15 @@ export function Board({ data }: { data: BoardData }) {
         ))}
 
         {/* swimlanes */}
-        {repos.map((repo) => {
+        {visibleRepos.map((repo) => {
           const inner = buckets.get(repo) ?? new Map();
           return (
-            <RepoRow key={repo} repo={repo} inner={inner} />
+            <RepoRow
+              key={repo}
+              repo={repo}
+              inner={inner}
+              columns={visibleColumns}
+            />
           );
         })}
       </div>
@@ -79,9 +101,11 @@ export function Board({ data }: { data: BoardData }) {
 function RepoRow({
   repo,
   inner,
+  columns,
 }: {
   repo: string;
   inner: Map<ColumnId, PR[]>;
+  columns: ColumnId[];
 }) {
   return (
     <>
@@ -90,7 +114,7 @@ function RepoRow({
           {repo}
         </span>
       </div>
-      {COLUMN_ORDER.map((col) => {
+      {columns.map((col) => {
         const items = inner.get(col) ?? [];
         return (
           <div

@@ -15,10 +15,14 @@ export function SettingsModal({
   onSave: (next: Settings) => void;
 }) {
   const [orgsText, setOrgsText] = useState(settings.orgs.join(", "));
+  const [showDone, setShowDone] = useState(settings.showDone);
 
   useEffect(() => {
-    if (open) setOrgsText(settings.orgs.join(", "));
-  }, [open, settings.orgs]);
+    if (open) {
+      setOrgsText(settings.orgs.join(", "));
+      setShowDone(settings.showDone);
+    }
+  }, [open, settings.orgs, settings.showDone]);
 
   if (!open) return null;
 
@@ -27,7 +31,7 @@ export function SettingsModal({
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    onSave({ orgs });
+    onSave({ orgs, showDone });
     onClose();
   };
 
@@ -53,6 +57,15 @@ export function SettingsModal({
           placeholder="MinutHQ, anthropics"
           className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
         />
+        <label className="mt-4 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showDone}
+            onChange={(e) => setShowDone(e.target.checked)}
+            className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
+          />
+          <span>Show &ldquo;Done&rdquo; column</span>
+        </label>
         <div className="mt-5 flex justify-end gap-2">
           <button
             onClick={onClose}

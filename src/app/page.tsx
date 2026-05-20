@@ -52,7 +52,10 @@ export default function Page() {
             Failed to load PRs: {(query.error as Error).message}
           </div>
         ) : query.data ? (
-          <Board data={query.data} />
+          <Board
+            data={query.data}
+            hiddenColumns={settings.showDone ? [] : ["done"]}
+          />
         ) : (
           <CenteredMessage>Loading pull requests…</CenteredMessage>
         )}
