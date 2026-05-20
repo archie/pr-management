@@ -3,10 +3,13 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ThemeApplier } from "@/components/ThemeApplier";
+import { useSettings } from "@/hooks/useSettings";
 
 export default function SignInPage() {
   const { status } = useSession();
   const router = useRouter();
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -16,6 +19,7 @@ export default function SignInPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
+      <ThemeApplier theme={settings.theme} />
       <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <h1 className="text-lg font-semibold">PR Board</h1>
         <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">

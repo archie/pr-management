@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Board } from "@/components/Board";
 import { Header } from "@/components/Header";
 import { SettingsModal } from "@/components/SettingsModal";
+import { ThemeApplier } from "@/components/ThemeApplier";
 import { useSettings } from "@/hooks/useSettings";
 import type { BoardData } from "@/lib/types";
 
@@ -40,6 +41,7 @@ export default function Page() {
 
   return (
     <div className="flex h-screen flex-col">
+      <ThemeApplier theme={settings.theme} />
       <Header
         fetchedAt={query.data?.fetchedAt}
         isFetching={query.isFetching}

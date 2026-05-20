@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Settings } from "@/hooks/useSettings";
+import type { Settings, Theme } from "@/hooks/useSettings";
 
 export function SettingsModal({
   open,
@@ -16,13 +16,15 @@ export function SettingsModal({
 }) {
   const [orgsText, setOrgsText] = useState(settings.orgs.join(", "));
   const [showDone, setShowDone] = useState(settings.showDone);
+  const [theme, setTheme] = useState<Theme>(settings.theme);
 
   useEffect(() => {
     if (open) {
       setOrgsText(settings.orgs.join(", "));
       setShowDone(settings.showDone);
+      setTheme(settings.theme);
     }
-  }, [open, settings.orgs, settings.showDone]);
+  }, [open, settings.orgs, settings.showDone, settings.theme]);
 
   if (!open) return null;
 
@@ -31,7 +33,7 @@ export function SettingsModal({
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    onSave({ orgs, showDone });
+    onSave({ orgs, showDone, theme });
     onClose();
   };
 
@@ -66,6 +68,23 @@ export function SettingsModal({
           />
           <span>Show &ldquo;Done&rdquo; column</span>
         </label>
+        <label className="mt-4 block text-sm font-medium">Theme</label>
+        <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5 dark:border-neutral-700">
+          {(["system", "light", "dark"] as Theme[]).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setTheme(option)}
+              className={
+                theme === option
+                  ? "rounded px-3 py-1 text-xs font-medium bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
+                  : "rounded px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+              }
+            >
+              {option === "system" ? "System" : option === "light" ? "Light" : "Dark"}
+            </button>
+          ))}
+        </div>
         <div className="mt-5 flex justify-end gap-2">
           <button
             onClick={onClose}

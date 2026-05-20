@@ -4,15 +4,23 @@ import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "pr-board-settings:v1";
 
+export type Theme = "system" | "light" | "dark";
+
 export interface Settings {
   orgs: string[];
   showDone: boolean;
+  theme: Theme;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   orgs: ["MinutHQ"],
   showDone: true,
+  theme: "system",
 };
+
+function isTheme(v: unknown): v is Theme {
+  return v === "system" || v === "light" || v === "dark";
+}
 
 function read(): Settings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
@@ -26,6 +34,7 @@ function read(): Settings {
         typeof parsed.showDone === "boolean"
           ? parsed.showDone
           : DEFAULT_SETTINGS.showDone,
+      theme: isTheme(parsed.theme) ? parsed.theme : DEFAULT_SETTINGS.theme,
     };
   } catch {
     return DEFAULT_SETTINGS;
