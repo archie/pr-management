@@ -7,12 +7,12 @@ export type ColumnId =
   | "reviewRequests";
 
 export const COLUMN_ORDER: ColumnId[] = [
+  "reviewRequests",
   "draft",
   "reviewRequired",
   "changesRequested",
   "readyToMerge",
   "done",
-  "reviewRequests",
 ];
 
 export const COLUMN_LABEL: Record<ColumnId, string> = {
