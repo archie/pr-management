@@ -59,6 +59,8 @@ export interface PR {
     login: string;
     avatarUrl: string;
   } | null;
+  /** Currently-pending requested reviewers (Users prefixed with @, Teams with @team-name). */
+  requestedReviewers: string[];
   /** populated by the server: which column this PR sits in */
   column: ColumnId;
   /** populated by the server: stack id this PR belongs to (if any) */

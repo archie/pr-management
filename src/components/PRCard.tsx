@@ -49,7 +49,18 @@ function ReviewBadge({ decision }: { decision: PR["reviewDecision"] }) {
   );
 }
 
-export function PRCard({ pr }: { pr: PR }) {
+export function PRCard({
+  pr,
+  showWaitingFor = true,
+}: {
+  pr: PR;
+  showWaitingFor?: boolean;
+}) {
+  const showReviewers =
+    showWaitingFor &&
+    pr.column !== "reviewRequests" &&
+    pr.requestedReviewers.length > 0 &&
+    pr.reviewDecision !== "APPROVED";
   return (
     <a
       href={pr.url}
@@ -81,6 +92,17 @@ export function PRCard({ pr }: { pr: PR }) {
           </span>
         </div>
       </div>
+      {showReviewers ? (
+        <div
+          className="mt-1.5 truncate text-[11px] text-neutral-500 dark:text-neutral-400"
+          title={`Waiting on ${pr.requestedReviewers.join(", ")}`}
+        >
+          Waiting on{" "}
+          <span className="text-neutral-700 dark:text-neutral-200">
+            {pr.requestedReviewers.join(", ")}
+          </span>
+        </div>
+      ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <ReviewBadge decision={pr.reviewDecision} />
         <ChecksDot state={pr.checksState} />

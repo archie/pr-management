@@ -35,9 +35,11 @@ function bucketize(prs: PR[]) {
 export function Board({
   data,
   hiddenColumns,
+  showWaitingFor = true,
 }: {
   data: BoardData;
   hiddenColumns?: ColumnId[];
+  showWaitingFor?: boolean;
 }) {
   const visibleColumns = useMemo(
     () => COLUMN_ORDER.filter((c) => !hiddenColumns?.includes(c)),
@@ -90,6 +92,7 @@ export function Board({
               repo={repo}
               inner={inner}
               columns={visibleColumns}
+              showWaitingFor={showWaitingFor}
             />
           );
         })}
@@ -102,10 +105,12 @@ function RepoRow({
   repo,
   inner,
   columns,
+  showWaitingFor,
 }: {
   repo: string;
   inner: Map<ColumnId, PR[]>;
   columns: ColumnId[];
+  showWaitingFor: boolean;
 }) {
   return (
     <>
@@ -124,7 +129,11 @@ function RepoRow({
             )}
           >
             {items.map((pr) => (
-              <PRCard key={pr.id} pr={pr} />
+              <PRCard
+                key={pr.id}
+                pr={pr}
+                showWaitingFor={showWaitingFor}
+              />
             ))}
           </div>
         );

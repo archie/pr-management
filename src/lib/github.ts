@@ -28,6 +28,16 @@ const SEARCH_QUERY = /* GraphQL */ `
             avatarUrl
           }
           reviewDecision
+          reviewRequests(first: 20) {
+            nodes {
+              requestedReviewer {
+                __typename
+                ... on User { login }
+                ... on Team { name }
+                ... on Mannequin { login }
+              }
+            }
+          }
           commits(last: 1) {
             nodes {
               commit {
@@ -60,6 +70,14 @@ interface GraphPR {
   repository: { nameWithOwner: string };
   author: { login: string; avatarUrl?: string } | null;
   reviewDecision: PR["reviewDecision"];
+  reviewRequests: {
+    nodes: Array<{
+      requestedReviewer:
+        | { __typename: "User" | "Mannequin"; login: string }
+        | { __typename: "Team"; name: string }
+        | null;
+    }>;
+  };
   commits: {
     nodes: Array<{
       commit: {
@@ -78,7 +96,18 @@ function buildOrgFilter(orgs: string[]): string {
   return orgs.map((o) => `org:${o}`).join(" ");
 }
 
+function reviewerLabel(
+  r: GraphPR["reviewRequests"]["nodes"][number]["requestedReviewer"],
+): string | null {
+  if (!r) return null;
+  if (r.__typename === "Team") return `@${r.name}`;
+  return `@${r.login}`;
+}
+
 function toPR(node: GraphPR, column: PR["column"]): PR {
+  const requestedReviewers = node.reviewRequests.nodes
+    .map((n) => reviewerLabel(n.requestedReviewer))
+    .filter((s): s is string => s !== null);
   return {
     id: node.id,
     number: node.number,
@@ -103,6 +132,7 @@ function toPR(node: GraphPR, column: PR["column"]): PR {
           avatarUrl: node.author.avatarUrl ?? "",
         }
       : null,
+    requestedReviewers,
     column,
     stackId: null,
     stackPosition: null,

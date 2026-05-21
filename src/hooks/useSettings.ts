@@ -9,12 +9,14 @@ export type Theme = "system" | "light" | "dark";
 export interface Settings {
   orgs: string[];
   showDone: boolean;
+  showWaitingFor: boolean;
   theme: Theme;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   orgs: ["MinutHQ"],
   showDone: true,
+  showWaitingFor: true,
   theme: "system",
 };
 
@@ -34,6 +36,10 @@ function read(): Settings {
         typeof parsed.showDone === "boolean"
           ? parsed.showDone
           : DEFAULT_SETTINGS.showDone,
+      showWaitingFor:
+        typeof parsed.showWaitingFor === "boolean"
+          ? parsed.showWaitingFor
+          : DEFAULT_SETTINGS.showWaitingFor,
       theme: isTheme(parsed.theme) ? parsed.theme : DEFAULT_SETTINGS.theme,
     };
   } catch {

@@ -16,15 +16,23 @@ export function SettingsModal({
 }) {
   const [orgsText, setOrgsText] = useState(settings.orgs.join(", "));
   const [showDone, setShowDone] = useState(settings.showDone);
+  const [showWaitingFor, setShowWaitingFor] = useState(settings.showWaitingFor);
   const [theme, setTheme] = useState<Theme>(settings.theme);
 
   useEffect(() => {
     if (open) {
       setOrgsText(settings.orgs.join(", "));
       setShowDone(settings.showDone);
+      setShowWaitingFor(settings.showWaitingFor);
       setTheme(settings.theme);
     }
-  }, [open, settings.orgs, settings.showDone, settings.theme]);
+  }, [
+    open,
+    settings.orgs,
+    settings.showDone,
+    settings.showWaitingFor,
+    settings.theme,
+  ]);
 
   if (!open) return null;
 
@@ -33,7 +41,7 @@ export function SettingsModal({
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    onSave({ orgs, showDone, theme });
+    onSave({ orgs, showDone, showWaitingFor, theme });
     onClose();
   };
 
@@ -67,6 +75,15 @@ export function SettingsModal({
             className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
           />
           <span>Show &ldquo;Done&rdquo; column</span>
+        </label>
+        <label className="mt-2 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showWaitingFor}
+            onChange={(e) => setShowWaitingFor(e.target.checked)}
+            className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
+          />
+          <span>Show pending reviewers on cards</span>
         </label>
         <label className="mt-4 block text-sm font-medium">Theme</label>
         <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5 dark:border-neutral-700">
