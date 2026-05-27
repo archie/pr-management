@@ -46,27 +46,45 @@ export function assignColumn(pr: {
 /**
  * Remap a classic column to the experimental board layout, reframing the
  * author's open PRs by whose turn it is:
- *  - "Waiting my input"  — something I, the author, must act on: a reviewer
- *    requested changes, or checks are failing (incl. approved-but-failing,
- *    which lands here via the classic "changesRequested" bucket).
- *  - "Waiting for review" — open and blocked on reviewers, nothing failing.
+ *  - "Waiting my input"  — something I, the author, must act on: checks are
+ *    failing, or a reviewer requested changes that I haven't bounced back yet.
+ *  - "Waiting for review" — blocked on reviewers: awaiting a first review, or
+ *    I've already addressed feedback and re-requested review.
+ *
+ * The key nuance: GitHub keeps reviewDecision === "CHANGES_REQUESTED" until the
+ * reviewer re-approves, even after the author pushes fixes and re-requests
+ * review. But re-requesting puts the reviewer back into the pending review
+ * requests, so a CHANGES_REQUESTED PR with pending reviewers is the reviewer's
+ * turn, not the author's.
+ *
  * Columns that aren't author-action states (reviewRequests, draft,
  * readyToMerge, done) pass through unchanged.
  */
 export function toExperimentalColumn(pr: {
   column: ColumnId;
+  reviewDecision: PR["reviewDecision"];
   checksState: PR["checksState"];
+  requestedReviewers: string[];
 }): ColumnId {
-  switch (pr.column) {
-    case "changesRequested":
-      return "waitingMyInput";
-    case "reviewRequired":
-      return pr.checksState === "FAILURE" || pr.checksState === "ERROR"
-        ? "waitingMyInput"
-        : "waitingForReview";
-    default:
-      return pr.column;
+  // Only the two open "needs someone" buckets get reframed.
+  if (pr.column !== "reviewRequired" && pr.column !== "changesRequested") {
+    return pr.column;
   }
+  // Failing checks are always the author's job to fix, regardless of review
+  // state (this also covers approved-but-failing, which lands in the classic
+  // "changesRequested" bucket).
+  if (pr.checksState === "FAILURE" || pr.checksState === "ERROR") {
+    return "waitingMyInput";
+  }
+  // A reviewer asked for changes and nobody is pending a (re-)review → my turn.
+  if (
+    pr.reviewDecision === "CHANGES_REQUESTED" &&
+    pr.requestedReviewers.length === 0
+  ) {
+    return "waitingMyInput";
+  }
+  // Otherwise it's blocked on reviewers: first review, or a re-requested one.
+  return "waitingForReview";
 }
 
 /** Extract a ticket key like "GXP-1234" from a PR title. Returns null if none found. */
