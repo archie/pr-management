@@ -1,7 +1,7 @@
 import type { PR } from "@/lib/types";
 import clsx from "clsx";
 
-function ChecksDot({ state }: { state: PR["checksState"] }) {
+export function ChecksDot({ state }: { state: PR["checksState"] }) {
   if (state === null) return null;
   const color =
     state === "SUCCESS"
@@ -23,7 +23,7 @@ function ChecksDot({ state }: { state: PR["checksState"] }) {
   );
 }
 
-function ReviewBadge({ decision }: { decision: PR["reviewDecision"] }) {
+export function ReviewBadge({ decision }: { decision: PR["reviewDecision"] }) {
   if (!decision) return null;
   const label =
     decision === "APPROVED"

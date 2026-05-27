@@ -39,6 +39,21 @@ export const COLUMN_LABEL: Record<ColumnId, string> = {
   reviewRequests: "Your review requested",
 };
 
+/** One-line explanation of each column, used by the Help modal. */
+export const COLUMN_DESCRIPTION: Record<ColumnId, string> = {
+  reviewRequests: "Someone requested your review.",
+  draft: "Your open draft pull requests.",
+  reviewRequired: "Open and awaiting review — no review decision yet.",
+  changesRequested:
+    "A reviewer requested changes, or it's approved but checks are failing.",
+  waitingMyInput:
+    "The ball's in your court: checks are failing, or changes were requested and nobody is pending a re-review.",
+  waitingForReview:
+    "Blocked on reviewers: awaiting a first review, or you've re-requested review after addressing feedback.",
+  readyToMerge: "Approved and checks aren't failing.",
+  done: "Merged or closed in the last 7 days.",
+};
+
 export type ChecksState =
   | "SUCCESS"
   | "PENDING"

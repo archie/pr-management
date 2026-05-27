@@ -6,11 +6,13 @@ export function Header({
   fetchedAt,
   isFetching,
   onRefresh,
+  onOpenHelp,
   onOpenSettings,
 }: {
   fetchedAt?: string;
   isFetching: boolean;
   onRefresh: () => void;
+  onOpenHelp: () => void;
   onOpenSettings: () => void;
 }) {
   const { data: session } = useSession();
@@ -29,6 +31,14 @@ export function Header({
         )}
       </div>
       <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenHelp}
+          aria-label="Help"
+          title="What the board shows"
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-neutral-300 bg-white text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+        >
+          ?
+        </button>
         <button
           onClick={onRefresh}
           className="rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"

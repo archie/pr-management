@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { Board } from "@/components/Board";
 import { Header } from "@/components/Header";
+import { HelpModal } from "@/components/HelpModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ThemeApplier } from "@/components/ThemeApplier";
 import { useSettings } from "@/hooks/useSettings";
@@ -14,6 +15,7 @@ export default function Page() {
   const { status } = useSession();
   const { settings, update, hydrated } = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const orgs = settings.orgs.join(",");
 
@@ -46,6 +48,7 @@ export default function Page() {
         fetchedAt={query.data?.fetchedAt}
         isFetching={query.isFetching}
         onRefresh={() => query.refetch()}
+        onOpenHelp={() => setHelpOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <main className="flex-1 overflow-auto p-3">
@@ -64,6 +67,11 @@ export default function Page() {
           <CenteredMessage>Loading pull requests…</CenteredMessage>
         )}
       </main>
+      <HelpModal
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        experimental={settings.experimentalBoard}
+      />
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
