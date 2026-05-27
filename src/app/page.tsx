@@ -58,6 +58,7 @@ export default function Page() {
             data={query.data}
             hiddenColumns={settings.showDone ? [] : ["done"]}
             showWaitingFor={settings.showWaitingFor}
+            experimental={settings.experimentalBoard}
           />
         ) : (
           <CenteredMessage>Loading pull requests…</CenteredMessage>

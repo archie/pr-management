@@ -10,6 +10,7 @@ export interface Settings {
   orgs: string[];
   showDone: boolean;
   showWaitingFor: boolean;
+  experimentalBoard: boolean;
   theme: Theme;
 }
 
@@ -17,6 +18,7 @@ const DEFAULT_SETTINGS: Settings = {
   orgs: ["MinutHQ"],
   showDone: true,
   showWaitingFor: true,
+  experimentalBoard: false,
   theme: "system",
 };
 
@@ -40,6 +42,10 @@ function read(): Settings {
         typeof parsed.showWaitingFor === "boolean"
           ? parsed.showWaitingFor
           : DEFAULT_SETTINGS.showWaitingFor,
+      experimentalBoard:
+        typeof parsed.experimentalBoard === "boolean"
+          ? parsed.experimentalBoard
+          : DEFAULT_SETTINGS.experimentalBoard,
       theme: isTheme(parsed.theme) ? parsed.theme : DEFAULT_SETTINGS.theme,
     };
   } catch {

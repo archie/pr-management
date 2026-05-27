@@ -2,6 +2,8 @@ export type ColumnId =
   | "draft"
   | "reviewRequired"
   | "changesRequested"
+  | "waitingMyInput"
+  | "waitingForReview"
   | "readyToMerge"
   | "done"
   | "reviewRequests";
@@ -15,10 +17,23 @@ export const COLUMN_ORDER: ColumnId[] = [
   "done",
 ];
 
+/** Experimental board layout: splits the author's open PRs by whose turn it is
+ * ("Waiting my input" vs "Waiting for review") instead of by raw review state. */
+export const EXPERIMENTAL_COLUMN_ORDER: ColumnId[] = [
+  "reviewRequests",
+  "draft",
+  "waitingMyInput",
+  "waitingForReview",
+  "readyToMerge",
+  "done",
+];
+
 export const COLUMN_LABEL: Record<ColumnId, string> = {
   draft: "Draft",
   reviewRequired: "Review required",
   changesRequested: "Changes requested",
+  waitingMyInput: "Waiting my input",
+  waitingForReview: "Waiting for review",
   readyToMerge: "Ready to merge",
   done: "Done",
   reviewRequests: "Your review requested",

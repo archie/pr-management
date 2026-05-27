@@ -1,7 +1,8 @@
 "use client";
 
 import type { BoardData, ColumnId, PR } from "@/lib/types";
-import { COLUMN_LABEL, COLUMN_ORDER } from "@/lib/types";
+import { COLUMN_LABEL, COLUMN_ORDER, EXPERIMENTAL_COLUMN_ORDER } from "@/lib/types";
+import { toExperimentalColumn } from "@/lib/kanban";
 import { PRCard } from "./PRCard";
 import clsx from "clsx";
 import { useMemo } from "react";
@@ -36,23 +37,35 @@ export function Board({
   data,
   hiddenColumns,
   showWaitingFor = true,
+  experimental = false,
 }: {
   data: BoardData;
   hiddenColumns?: ColumnId[];
   showWaitingFor?: boolean;
+  experimental?: boolean;
 }) {
+  // In experimental mode, remap each PR's column to the "whose turn is it"
+  // layout; everything downstream reads the (possibly remapped) pr.column.
+  const prs = useMemo(
+    () =>
+      experimental
+        ? data.prs.map((p) => ({ ...p, column: toExperimentalColumn(p) }))
+        : data.prs,
+    [data.prs, experimental],
+  );
+  const order = experimental ? EXPERIMENTAL_COLUMN_ORDER : COLUMN_ORDER;
   const visibleColumns = useMemo(
-    () => COLUMN_ORDER.filter((c) => !hiddenColumns?.includes(c)),
-    [hiddenColumns],
+    () => order.filter((c) => !hiddenColumns?.includes(c)),
+    [order, hiddenColumns],
   );
   const visibleRepos = useMemo(() => {
     const hidden = new Set(hiddenColumns ?? []);
     const reposWithVisiblePRs = new Set(
-      data.prs.filter((p) => !hidden.has(p.column)).map((p) => p.repo),
+      prs.filter((p) => !hidden.has(p.column)).map((p) => p.repo),
     );
     return data.repos.filter((r) => reposWithVisiblePRs.has(r));
-  }, [data, hiddenColumns]);
-  const buckets = bucketize(data.prs);
+  }, [data.repos, prs, hiddenColumns]);
+  const buckets = bucketize(prs);
 
   if (visibleRepos.length === 0) {
     return (

@@ -43,6 +43,32 @@ export function assignColumn(pr: {
   return "reviewRequired";
 }
 
+/**
+ * Remap a classic column to the experimental board layout, reframing the
+ * author's open PRs by whose turn it is:
+ *  - "Waiting my input"  — something I, the author, must act on: a reviewer
+ *    requested changes, or checks are failing (incl. approved-but-failing,
+ *    which lands here via the classic "changesRequested" bucket).
+ *  - "Waiting for review" — open and blocked on reviewers, nothing failing.
+ * Columns that aren't author-action states (reviewRequests, draft,
+ * readyToMerge, done) pass through unchanged.
+ */
+export function toExperimentalColumn(pr: {
+  column: ColumnId;
+  checksState: PR["checksState"];
+}): ColumnId {
+  switch (pr.column) {
+    case "changesRequested":
+      return "waitingMyInput";
+    case "reviewRequired":
+      return pr.checksState === "FAILURE" || pr.checksState === "ERROR"
+        ? "waitingMyInput"
+        : "waitingForReview";
+    default:
+      return pr.column;
+  }
+}
+
 /** Extract a ticket key like "GXP-1234" from a PR title. Returns null if none found. */
 export function extractTicketKey(title: string): string | null {
   const match = title.match(/[A-Z][A-Z0-9]+-\d+/);
