@@ -6,7 +6,7 @@ import {
   COLUMN_ORDER,
   EXPERIMENTAL_COLUMN_ORDER,
 } from "@/lib/types";
-import { ChecksDot, ReviewBadge } from "./PRCard";
+import { ChecksDot, ConflictBadge, ReviewBadge } from "./PRCard";
 
 export function HelpModal({
   open,
@@ -64,6 +64,14 @@ export function HelpModal({
             <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
               Review status: approved, changes requested, or pending. Hidden
               until a review exists.
+            </p>
+          </li>
+          <li>
+            <ConflictBadge mergeable="CONFLICTING" />
+            <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+              The PR has merge conflicts and needs a rebase. On the experimental
+              layout, conflicting PRs always show up in &ldquo;Waiting my
+              input&rdquo;.
             </p>
           </li>
           <li>

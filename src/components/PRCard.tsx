@@ -23,6 +23,18 @@ export function ChecksDot({ state }: { state: PR["checksState"] }) {
   );
 }
 
+export function ConflictBadge({ mergeable }: { mergeable: PR["mergeable"] }) {
+  if (mergeable !== "CONFLICTING") return null;
+  return (
+    <span
+      title="Merge conflicts — needs a rebase before it can merge"
+      className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+    >
+      Conflicts
+    </span>
+  );
+}
+
 export function ReviewBadge({ decision }: { decision: PR["reviewDecision"] }) {
   if (!decision) return null;
   const label =
@@ -105,6 +117,7 @@ export function PRCard({
       ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <ReviewBadge decision={pr.reviewDecision} />
+        <ConflictBadge mergeable={pr.mergeable} />
         <ChecksDot state={pr.checksState} />
         {pr.stackId && pr.stackPosition && pr.stackSize ? (
           <span

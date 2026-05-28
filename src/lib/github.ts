@@ -28,6 +28,7 @@ const SEARCH_QUERY = /* GraphQL */ `
             avatarUrl
           }
           reviewDecision
+          mergeable
           reviewRequests(first: 20) {
             nodes {
               requestedReviewer {
@@ -70,6 +71,7 @@ interface GraphPR {
   repository: { nameWithOwner: string };
   author: { login: string; avatarUrl?: string } | null;
   reviewDecision: PR["reviewDecision"];
+  mergeable: PR["mergeable"];
   reviewRequests: {
     nodes: Array<{
       requestedReviewer:
@@ -126,6 +128,7 @@ function toPR(node: GraphPR, column: PR["column"]): PR {
     reviewDecision: node.reviewDecision,
     checksState:
       node.commits.nodes[0]?.commit.statusCheckRollup?.state ?? null,
+    mergeable: node.mergeable ?? null,
     author: node.author
       ? {
           login: node.author.login,

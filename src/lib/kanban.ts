@@ -46,33 +46,49 @@ export function assignColumn(pr: {
 /**
  * Remap a classic column to the experimental board layout, reframing the
  * author's open PRs by whose turn it is:
- *  - "Waiting my input"  — something I, the author, must act on: checks are
- *    failing, or a reviewer requested changes that I haven't bounced back yet.
+ *  - "Waiting my input"  — something I, the author, must act on: a merge
+ *    conflict, failing checks, or a reviewer's change request I haven't
+ *    bounced back yet.
  *  - "Waiting for review" — blocked on reviewers: awaiting a first review, or
  *    I've already addressed feedback and re-requested review.
  *
- * The key nuance: GitHub keeps reviewDecision === "CHANGES_REQUESTED" until the
- * reviewer re-approves, even after the author pushes fixes and re-requests
- * review. But re-requesting puts the reviewer back into the pending review
- * requests, so a CHANGES_REQUESTED PR with pending reviewers is the reviewer's
- * turn, not the author's.
+ * Notable nuances:
+ *  - GitHub keeps reviewDecision === "CHANGES_REQUESTED" until the reviewer
+ *    re-approves, even after the author re-requests review. We use the pending
+ *    review requests as the tiebreaker: with someone pending, it's the
+ *    reviewer's turn; with nobody pending, it's the author's.
+ *  - A merge conflict overrides "Ready to merge": an approved PR can't actually
+ *    merge until the author rebases.
+ *  - Drafts pass through to the Draft column even if conflicting — drafts are
+ *    intentional WIP and conflicts there aren't surface-worthy yet.
  *
- * Columns that aren't author-action states (reviewRequests, draft,
- * readyToMerge, done) pass through unchanged.
+ * Non-author-action columns (reviewRequests, draft, done) always pass through.
  */
 export function toExperimentalColumn(pr: {
   column: ColumnId;
   reviewDecision: PR["reviewDecision"];
   checksState: PR["checksState"];
+  mergeable: PR["mergeable"];
   requestedReviewers: string[];
 }): ColumnId {
-  // Only the two open "needs someone" buckets get reframed.
-  if (pr.column !== "reviewRequired" && pr.column !== "changesRequested") {
+  if (
+    pr.column === "reviewRequests" ||
+    pr.column === "done" ||
+    pr.column === "draft"
+  ) {
     return pr.column;
   }
-  // Failing checks are always the author's job to fix, regardless of review
-  // state (this also covers approved-but-failing, which lands in the classic
-  // "changesRequested" bucket).
+  // Merge conflicts are always the author's job to resolve, even when the PR
+  // is otherwise approved + green.
+  if (pr.mergeable === "CONFLICTING") {
+    return "waitingMyInput";
+  }
+  // Approved + checks ok + no conflicts stays "Ready to merge".
+  if (pr.column === "readyToMerge") {
+    return "readyToMerge";
+  }
+  // Failing checks are the author's job to fix (also covers
+  // approved-but-failing, which classic logic buckets as "changesRequested").
   if (pr.checksState === "FAILURE" || pr.checksState === "ERROR") {
     return "waitingMyInput";
   }

@@ -68,6 +68,8 @@ export type ReviewDecision =
   | "REVIEW_REQUIRED"
   | null;
 
+export type Mergeable = "MERGEABLE" | "CONFLICTING" | "UNKNOWN" | null;
+
 export interface PR {
   id: string;
   number: number;
@@ -85,6 +87,8 @@ export interface PR {
   headRefName: string;
   reviewDecision: ReviewDecision;
   checksState: ChecksState;
+  /** GitHub's view on whether the PR can be merged cleanly (CONFLICTING = author needs to rebase). */
+  mergeable: Mergeable;
   author: {
     login: string;
     avatarUrl: string;
