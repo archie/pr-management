@@ -90,14 +90,14 @@ export function PRCard({
       }
     >
       <div className="min-w-0">
-        <div className="line-clamp-2 text-sm font-medium leading-snug text-neutral-900 dark:text-neutral-100">
+        <div className="break-words text-sm font-medium leading-snug text-neutral-900 dark:text-neutral-100">
           {pr.title}
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+        <div className="mt-1 flex items-baseline gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
           <span className="font-mono">#{pr.number}</span>
           <span className="text-neutral-300 dark:text-neutral-600">·</span>
           <span
-            className="truncate font-mono text-neutral-600 dark:text-neutral-300"
+            className="break-all font-mono text-neutral-600 dark:text-neutral-300"
             title={pr.headRefName}
           >
             {pr.headRefName}
