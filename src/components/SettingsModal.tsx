@@ -17,9 +17,7 @@ export function SettingsModal({
   const [orgsText, setOrgsText] = useState(settings.orgs.join(", "));
   const [showDone, setShowDone] = useState(settings.showDone);
   const [showWaitingFor, setShowWaitingFor] = useState(settings.showWaitingFor);
-  const [experimentalBoard, setExperimentalBoard] = useState(
-    settings.experimentalBoard,
-  );
+  const [classicBoard, setClassicBoard] = useState(settings.classicBoard);
   const [theme, setTheme] = useState<Theme>(settings.theme);
 
   useEffect(() => {
@@ -27,7 +25,7 @@ export function SettingsModal({
       setOrgsText(settings.orgs.join(", "));
       setShowDone(settings.showDone);
       setShowWaitingFor(settings.showWaitingFor);
-      setExperimentalBoard(settings.experimentalBoard);
+      setClassicBoard(settings.classicBoard);
       setTheme(settings.theme);
     }
   }, [
@@ -35,7 +33,7 @@ export function SettingsModal({
     settings.orgs,
     settings.showDone,
     settings.showWaitingFor,
-    settings.experimentalBoard,
+    settings.classicBoard,
     settings.theme,
   ]);
 
@@ -46,7 +44,7 @@ export function SettingsModal({
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    onSave({ orgs, showDone, showWaitingFor, experimentalBoard, theme });
+    onSave({ orgs, showDone, showWaitingFor, classicBoard, theme });
     onClose();
   };
 
@@ -93,21 +91,17 @@ export function SettingsModal({
         <label className="mt-2 flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            checked={experimentalBoard}
-            onChange={(e) => setExperimentalBoard(e.target.checked)}
+            checked={classicBoard}
+            onChange={(e) => setClassicBoard(e.target.checked)}
             className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
           />
-          <span>
-            Experimental board layout{" "}
-            <span className="rounded bg-amber-100 px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-              Beta
-            </span>
-          </span>
+          <span>Classic board layout</span>
         </label>
         <p className="ml-6 mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-          Replaces &ldquo;Review required&rdquo; and &ldquo;Changes
-          requested&rdquo; with &ldquo;Waiting my input&rdquo; and &ldquo;Waiting
-          for review&rdquo;, grouping your open PRs by whose turn it is.
+          Shows &ldquo;Review required&rdquo; and &ldquo;Changes
+          requested&rdquo; columns instead of grouping your open PRs by whose
+          turn it is (&ldquo;Waiting my input&rdquo; and &ldquo;Waiting for
+          review&rdquo;).
         </p>
         <label className="mt-4 block text-sm font-medium">Theme</label>
         <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5 dark:border-neutral-700">

@@ -36,7 +36,7 @@ export function HelpModal({
         <div className="mt-4 flex items-baseline justify-between">
           <h3 className="text-sm font-medium">Columns</h3>
           <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-            {experimental ? "Experimental layout" : "Standard layout"}
+            {experimental ? "Default layout" : "Classic layout"}
           </span>
         </div>
         <dl className="mt-2 space-y-2.5">

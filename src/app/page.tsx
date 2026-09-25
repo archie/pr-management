@@ -61,7 +61,7 @@ export default function Page() {
             data={query.data}
             hiddenColumns={settings.showDone ? [] : ["done"]}
             showWaitingFor={settings.showWaitingFor}
-            experimental={settings.experimentalBoard}
+            experimental={!settings.classicBoard}
           />
         ) : (
           <CenteredMessage>Loading pull requests…</CenteredMessage>
@@ -70,7 +70,7 @@ export default function Page() {
       <HelpModal
         open={helpOpen}
         onClose={() => setHelpOpen(false)}
-        experimental={settings.experimentalBoard}
+        experimental={!settings.classicBoard}
       />
       <SettingsModal
         open={settingsOpen}

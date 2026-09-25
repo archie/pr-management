@@ -10,7 +10,8 @@ export interface Settings {
   orgs: string[];
   showDone: boolean;
   showWaitingFor: boolean;
-  experimentalBoard: boolean;
+  /** Opt back into the original column layout instead of the "whose turn" board. */
+  classicBoard: boolean;
   theme: Theme;
 }
 
@@ -18,7 +19,7 @@ const DEFAULT_SETTINGS: Settings = {
   orgs: ["MinutHQ"],
   showDone: true,
   showWaitingFor: true,
-  experimentalBoard: false,
+  classicBoard: false,
   theme: "system",
 };
 
@@ -42,10 +43,10 @@ function read(): Settings {
         typeof parsed.showWaitingFor === "boolean"
           ? parsed.showWaitingFor
           : DEFAULT_SETTINGS.showWaitingFor,
-      experimentalBoard:
-        typeof parsed.experimentalBoard === "boolean"
-          ? parsed.experimentalBoard
-          : DEFAULT_SETTINGS.experimentalBoard,
+      classicBoard:
+        typeof parsed.classicBoard === "boolean"
+          ? parsed.classicBoard
+          : DEFAULT_SETTINGS.classicBoard,
       theme: isTheme(parsed.theme) ? parsed.theme : DEFAULT_SETTINGS.theme,
     };
   } catch {
