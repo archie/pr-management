@@ -117,20 +117,22 @@ export function Board({
     );
   }
 
+  // No overflow on this wrapper: the page's <main> is the only scroll
+  // container, so the sticky header row pins to it when scrolling down.
   return (
-    <div className="board-scroll overflow-x-auto">
-      <div
-        className="grid min-w-[1400px] gap-x-3"
-        style={{
-          gridTemplateColumns: `200px repeat(${visibleColumns.length}, minmax(220px, 1fr))`,
-        }}
-      >
-        {/* header row */}
-        <div className="sticky top-0 z-10 bg-neutral-50 dark:bg-neutral-950" />
+    <div
+      className="grid min-w-[1400px] gap-x-3"
+      style={{
+        gridTemplateColumns: `200px repeat(${visibleColumns.length}, minmax(220px, 1fr))`,
+      }}
+    >
+      {/* header row: one sticky subgrid so its background also covers the column gaps */}
+      <div className="sticky top-0 z-10 col-span-full grid grid-cols-subgrid bg-neutral-50 dark:bg-neutral-950">
+        <div />
         {visibleColumns.map((col) => (
           <div
             key={col}
-            className="sticky top-0 z-10 flex items-baseline gap-1.5 bg-neutral-50 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400"
+            className="flex items-baseline gap-1.5 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
           >
             {COLUMN_LABEL[col]}
             {(columnCounts.get(col) ?? 0) > 0 && (
@@ -140,23 +142,23 @@ export function Board({
             )}
           </div>
         ))}
-
-        {/* swimlanes */}
-        {visibleRepos.map((repo) => {
-          const inner = buckets.get(repo) ?? new Map();
-          return (
-            <RepoRow
-              key={repo}
-              repo={repo}
-              inner={inner}
-              columns={visibleColumns}
-              showWaitingFor={showWaitingFor}
-              collapsed={collapsed.has(repo)}
-              onToggle={() => toggle(repo)}
-            />
-          );
-        })}
       </div>
+
+      {/* swimlanes */}
+      {visibleRepos.map((repo) => {
+        const inner = buckets.get(repo) ?? new Map();
+        return (
+          <RepoRow
+            key={repo}
+            repo={repo}
+            inner={inner}
+            columns={visibleColumns}
+            showWaitingFor={showWaitingFor}
+            collapsed={collapsed.has(repo)}
+            onToggle={() => toggle(repo)}
+          />
+        );
+      })}
     </div>
   );
 }

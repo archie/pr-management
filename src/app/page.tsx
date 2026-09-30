@@ -51,7 +51,7 @@ export default function Page() {
         onOpenHelp={() => setHelpOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
-      <main className="flex-1 overflow-auto p-3">
+      <main className="board-scroll flex-1 overflow-auto px-3 pb-3">
         {query.isError ? (
           <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
             Failed to load PRs: {(query.error as Error).message}
