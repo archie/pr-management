@@ -11,6 +11,8 @@ import {
   type PR,
 } from "@/lib/types";
 import { ChecksDot, ConflictBadge, PRCard, ReviewBadge } from "./PRCard";
+import { ChevronIcon } from "./Board";
+import { GearIcon, RefreshIcon } from "./Header";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -166,8 +168,7 @@ function HeroPreview() {
         >
           <div className="rounded-xl bg-gradient-to-b from-white/[0.14] to-white/[0.02] p-px">
             <div className="dark overflow-hidden rounded-[11px] bg-[#0b0c0e]">
-              <AppChrome />
-              <div className="pointer-events-none overflow-hidden p-3">
+              <div className="pointer-events-none overflow-hidden px-3 pb-3">
                 <MiniBoard />
               </div>
             </div>
@@ -178,25 +179,24 @@ function HeroPreview() {
   );
 }
 
-function AppChrome() {
+// Mirrors the board's header corner: title plus icon controls.
+function BoardCornerMock() {
   return (
-    <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-      <div className="flex items-baseline gap-3">
-        <span className="text-sm font-semibold tracking-tight">PR Board</span>
-        <span className="hidden text-[11px] text-neutral-500 sm:inline">
-          updated 12s ago
+    <div className="flex w-full items-center justify-between gap-2 pl-1">
+      <span className="whitespace-nowrap text-sm font-semibold tracking-tight">
+        PR Board
+      </span>
+      <div className="flex items-center gap-1 text-neutral-400">
+        <span className="flex h-7 w-7 items-center justify-center text-xs font-medium">
+          ?
         </span>
-      </div>
-      <div className="flex items-center gap-2">
-        {["?", "Refresh", "Settings"].map((l) => (
-          <span
-            key={l}
-            className="rounded-md border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-[11px] text-neutral-300"
-          >
-            {l}
-          </span>
-        ))}
-        <span className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-fuchsia-500" />
+        <span className="flex h-7 w-7 items-center justify-center">
+          <RefreshIcon className="h-4 w-4" />
+        </span>
+        <span className="flex h-7 w-7 items-center justify-center">
+          <GearIcon className="h-4 w-4" />
+        </span>
+        <span className="ml-0.5 h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-fuchsia-500" />
       </div>
     </div>
   );
@@ -206,51 +206,97 @@ const PREVIEW_COLUMNS: ColumnId[] = EXPERIMENTAL_COLUMN_ORDER.filter(
   (c) => c !== "done",
 );
 
+// Lanes shown collapsed in the hero, to show off collapsible swimlanes.
+const COLLAPSED_PREVIEW_REPOS = new Set(["acme/infra"]);
+
 function MiniBoard() {
-  const repos = Array.from(new Set(MOCK_PRS.map((p) => p.repo)));
+  // Collapsed lane in the middle so the hero's bottom fade doesn't hide it.
+  const repos = ["acme/api", "acme/infra", "acme/web"];
   return (
     <div
-      className="grid min-w-[1180px] gap-3"
+      className="grid min-w-[1180px] gap-x-3"
       style={{
-        gridTemplateColumns: `150px repeat(${PREVIEW_COLUMNS.length}, minmax(0, 1fr))`,
+        gridTemplateColumns: `190px repeat(${PREVIEW_COLUMNS.length}, minmax(0, 1fr))`,
       }}
     >
-      <div className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-        Repo
+      <div className="col-span-full grid min-h-10 grid-cols-subgrid items-center">
+        <BoardCornerMock />
+        {PREVIEW_COLUMNS.map((col) => {
+          const count = MOCK_PRS.filter((p) => p.column === col).length;
+          return (
+            <div
+              key={col}
+              className="flex items-baseline gap-1.5 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500"
+            >
+              {COLUMN_LABEL[col]}
+              {count > 0 && (
+                <span className="font-normal tabular-nums text-neutral-600">
+                  {count}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
-      {PREVIEW_COLUMNS.map((col) => (
-        <div
-          key={col}
-          className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500"
-        >
-          {COLUMN_LABEL[col]}
-        </div>
-      ))}
       {repos.map((repo) => (
-        <RepoLane key={repo} repo={repo} />
+        <RepoLane
+          key={repo}
+          repo={repo}
+          collapsed={COLLAPSED_PREVIEW_REPOS.has(repo)}
+        />
       ))}
     </div>
   );
 }
 
-function RepoLane({ repo }: { repo: string }) {
+function RepoLane({ repo, collapsed }: { repo: string; collapsed: boolean }) {
+  const prs = MOCK_PRS.filter((p) => p.repo === repo);
   return (
     <>
-      <div className="border-t border-neutral-800 px-2 py-3 text-sm font-medium text-neutral-200">
-        {repo}
-      </div>
-      {PREVIEW_COLUMNS.map((col) => (
-        <div
-          key={col}
-          className="flex flex-col gap-2 border-t border-neutral-800 px-1.5 py-2"
-        >
-          {MOCK_PRS.filter((p) => p.repo === repo && p.column === col).map(
-            (pr) => (
-              <PRCard key={pr.id} pr={pr} />
-            ),
+      <div
+        className={clsx(
+          "flex items-start gap-1.5 border-t border-neutral-800 px-2 text-sm font-medium text-neutral-200",
+          collapsed ? "py-2" : "py-3",
+        )}
+      >
+        <ChevronIcon
+          className={clsx(
+            "mt-0.5 h-4 w-4 shrink-0 text-neutral-500",
+            !collapsed && "rotate-90",
           )}
-        </div>
-      ))}
+        />
+        <span className="truncate">{repo}</span>
+        {collapsed && (
+          <span className="ml-auto text-xs font-normal tabular-nums text-neutral-500">
+            {prs.length}
+          </span>
+        )}
+      </div>
+      {PREVIEW_COLUMNS.map((col) => {
+        const items = prs.filter((p) => p.column === col);
+        if (collapsed) {
+          return (
+            <div
+              key={col}
+              className="flex items-center border-t border-neutral-800 px-3 py-2 text-xs tabular-nums text-neutral-500"
+            >
+              {items.length > 0
+                ? `${items.length} PR${items.length === 1 ? "" : "s"}`
+                : ""}
+            </div>
+          );
+        }
+        return (
+          <div
+            key={col}
+            className="flex flex-col gap-2 border-t border-neutral-800 px-1.5 py-2"
+          >
+            {items.map((pr) => (
+              <PRCard key={pr.id} pr={pr} />
+            ))}
+          </div>
+        );
+      })}
     </>
   );
 }
@@ -827,6 +873,27 @@ const MOCK_PRS: PR[] = [
     headRefName: "i18n/sv",
     column: "reviewRequests",
     checksState: "SUCCESS",
+  }),
+  mockPR({
+    id: "10",
+    repo: "acme/infra",
+    number: 214,
+    title: "Bump Terraform AWS provider",
+    column: "reviewRequests",
+  }),
+  mockPR({
+    id: "11",
+    repo: "acme/infra",
+    number: 211,
+    title: "Add staging read replica",
+    column: "waitingForReview",
+  }),
+  mockPR({
+    id: "12",
+    repo: "acme/infra",
+    number: 209,
+    title: "Rotate CI deploy keys",
+    column: "waitingForReview",
   }),
 ];
 

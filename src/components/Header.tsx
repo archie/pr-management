@@ -149,7 +149,7 @@ function UserMenu() {
   );
 }
 
-function RefreshIcon({ className }: { className?: string }) {
+export function RefreshIcon({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -168,7 +168,7 @@ function RefreshIcon({ className }: { className?: string }) {
   );
 }
 
-function GearIcon({ className }: { className?: string }) {
+export function GearIcon({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
