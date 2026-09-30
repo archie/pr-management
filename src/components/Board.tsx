@@ -102,6 +102,11 @@ export function Board({
     return data.repos.filter((r) => reposWithVisiblePRs.has(r));
   }, [data.repos, prs, hiddenColumns]);
   const buckets = bucketize(prs);
+  const columnCounts = useMemo(() => {
+    const counts = new Map<ColumnId, number>();
+    for (const p of prs) counts.set(p.column, (counts.get(p.column) ?? 0) + 1);
+    return counts;
+  }, [prs]);
   const { collapsed, toggle } = useCollapsedRepos();
 
   if (visibleRepos.length === 0) {
@@ -121,15 +126,18 @@ export function Board({
         }}
       >
         {/* header row */}
-        <div className="sticky top-0 z-10 bg-neutral-50 px-2 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400">
-          Repo
-        </div>
+        <div className="sticky top-0 z-10 bg-neutral-50 dark:bg-neutral-950" />
         {visibleColumns.map((col) => (
           <div
             key={col}
-            className="sticky top-0 z-10 bg-neutral-50 px-2 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400"
+            className="sticky top-0 z-10 flex items-baseline gap-1.5 bg-neutral-50 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400"
           >
             {COLUMN_LABEL[col]}
+            {(columnCounts.get(col) ?? 0) > 0 && (
+              <span className="font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                {columnCounts.get(col)}
+              </span>
+            )}
           </div>
         ))}
 
