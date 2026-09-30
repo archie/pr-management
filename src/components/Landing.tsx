@@ -597,10 +597,10 @@ function FinalCta({ onSignIn }: { onSignIn: () => void }) {
         }}
       />
       <Container className="relative text-center">
-        <h2 className="mx-auto max-w-3xl bg-gradient-to-b from-white to-white/60 bg-clip-text text-[38px] font-semibold leading-[1.08] tracking-[-0.03em] text-transparent sm:text-[56px]">
+        <h2 className="mx-auto max-w-3xl text-balance bg-gradient-to-b from-white to-white/60 bg-clip-text text-[38px] font-semibold leading-[1.08] tracking-[-0.03em] text-transparent sm:text-[56px]">
           Your review queue, finally in order.
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-[16px] text-[#8a8f98]">
+        <p className="mx-auto mt-5 max-w-md text-balance text-[16px] text-[#8a8f98]">
           Free to use. Sign in with GitHub and your board is ready in seconds.
         </p>
         <button
