@@ -115,7 +115,7 @@ export function Board({
   return (
     <div className="board-scroll overflow-x-auto">
       <div
-        className="grid min-w-[1400px] gap-3"
+        className="grid min-w-[1400px] gap-x-3"
         style={{
           gridTemplateColumns: `200px repeat(${visibleColumns.length}, minmax(220px, 1fr))`,
         }}
