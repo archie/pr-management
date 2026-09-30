@@ -78,20 +78,14 @@ function Nav({ onSignIn }: { onSignIn: () => void }) {
             Details
           </a>
         </nav>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onSignIn}
-            className="hidden rounded-md px-3 py-1.5 text-[13px] text-[#8a8f98] transition hover:text-white sm:block"
-          >
-            Log in
-          </button>
-          <button
-            onClick={onSignIn}
-            className="rounded-md bg-[#e6e6e6] px-3 py-1.5 text-[13px] font-medium text-[#08090a] transition hover:bg-white"
-          >
-            Sign up
-          </button>
-        </div>
+        {/* No accounts to create: GitHub is the only way in. */}
+        <button
+          onClick={onSignIn}
+          className="inline-flex items-center gap-1.5 rounded-md bg-[#e6e6e6] px-3 py-1.5 text-[13px] font-medium text-[#08090a] transition hover:bg-white"
+        >
+          <GithubMark />
+          Sign in
+        </button>
       </Container>
     </header>
   );
@@ -146,6 +140,9 @@ function Hero({ onSignIn }: { onSignIn: () => void }) {
             <Arrow />
           </a>
         </div>
+        <p className="mt-5 text-balance text-[13px] text-[#62666d]">
+          No sign-up. Use your GitHub account, and nothing is stored on our side.
+        </p>
       </Container>
 
       <HeroPreview />
@@ -526,8 +523,8 @@ const DETAILS: { title: string; body: string; icon: ReactNode }[] = [
     icon: <IconFilter />,
   },
   {
-    title: "Private repos included",
-    body: "Sign in once with GitHub OAuth. Your token stays in an encrypted session.",
+    title: "No sign-up, no database",
+    body: "Sign in with GitHub, private repos included. Your token stays in an encrypted cookie, settings stay in your browser, and PRs are fetched live, never stored.",
     icon: <IconLock />,
   },
   {
@@ -601,7 +598,8 @@ function FinalCta({ onSignIn }: { onSignIn: () => void }) {
           Your review queue, finally in order.
         </h2>
         <p className="mx-auto mt-5 max-w-md text-balance text-[16px] text-[#8a8f98]">
-          Free to use. Sign in with GitHub and your board is ready in seconds.
+          Free, with no sign-up. Sign in with GitHub and your board is ready
+          in seconds.
         </p>
         <button
           onClick={onSignIn}
