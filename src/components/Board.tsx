@@ -5,7 +5,43 @@ import { COLUMN_LABEL, COLUMN_ORDER, EXPERIMENTAL_COLUMN_ORDER } from "@/lib/typ
 import { toExperimentalColumn } from "@/lib/kanban";
 import { PRCard } from "./PRCard";
 import clsx from "clsx";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+const COLLAPSED_KEY = "pr-board-collapsed-repos:v1";
+
+// Collapsed swimlanes are a per-browser convenience, so they live in their own
+// localStorage key rather than in Settings.
+function useCollapsedRepos() {
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(COLLAPSED_KEY);
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) {
+        setCollapsed(new Set(parsed.filter((r) => typeof r === "string")));
+      }
+    } catch {
+      // ignore unreadable storage; everything starts expanded
+    }
+  }, []);
+
+  const toggle = useCallback((repo: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(repo)) next.delete(repo);
+      else next.add(repo);
+      try {
+        window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]));
+      } catch {
+        // ignore; the toggle still works for this session
+      }
+      return next;
+    });
+  }, []);
+
+  return { collapsed, toggle };
+}
 
 function bucketize(prs: PR[]) {
   // bucket[repo][column] = PR[]
@@ -66,6 +102,7 @@ export function Board({
     return data.repos.filter((r) => reposWithVisiblePRs.has(r));
   }, [data.repos, prs, hiddenColumns]);
   const buckets = bucketize(prs);
+  const { collapsed, toggle } = useCollapsedRepos();
 
   if (visibleRepos.length === 0) {
     return (
@@ -106,6 +143,8 @@ export function Board({
               inner={inner}
               columns={visibleColumns}
               showWaitingFor={showWaitingFor}
+              collapsed={collapsed.has(repo)}
+              onToggle={() => toggle(repo)}
             />
           );
         })}
@@ -119,21 +158,62 @@ function RepoRow({
   inner,
   columns,
   showWaitingFor,
+  collapsed,
+  onToggle,
 }: {
   repo: string;
   inner: Map<ColumnId, PR[]>;
   columns: ColumnId[];
   showWaitingFor: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
+  const total = columns.reduce((n, col) => n + (inner.get(col)?.length ?? 0), 0);
   return (
     <>
-      <div className="flex items-start border-t border-neutral-200 px-2 py-3 dark:border-neutral-800">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+        title={collapsed ? `Expand ${repo}` : `Collapse ${repo}`}
+        className={clsx(
+          "flex items-start gap-1.5 border-t border-neutral-200 px-2 text-left hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900",
+          collapsed ? "py-2" : "py-3",
+        )}
+      >
+        <ChevronIcon
+          className={clsx(
+            "mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform",
+            !collapsed && "rotate-90",
+          )}
+        />
         <span className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
           {repo}
         </span>
-      </div>
+        {collapsed && (
+          <span className="ml-auto shrink-0 text-xs tabular-nums text-neutral-400">
+            {total}
+          </span>
+        )}
+      </button>
       {columns.map((col) => {
         const items = inner.get(col) ?? [];
+        if (collapsed) {
+          // Collapsed lanes keep per-column counts so it's still clear where
+          // PRs are waiting; clicking anywhere on the row expands it again.
+          return (
+            <button
+              key={col}
+              type="button"
+              onClick={onToggle}
+              tabIndex={-1}
+              aria-hidden
+              className="flex items-center border-t border-neutral-200 px-3 py-2 text-left text-xs tabular-nums text-neutral-400 hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900"
+            >
+              {items.length > 0 ? `${items.length} PR${items.length === 1 ? "" : "s"}` : ""}
+            </button>
+          );
+        }
         return (
           <div
             key={col}
@@ -152,5 +232,23 @@ function RepoRow({
         );
       })}
     </>
+  );
+}
+
+function ChevronIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <path
+        fillRule="evenodd"
+        d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z"
+        clipRule="evenodd"
+      />
+    </svg>
   );
 }
