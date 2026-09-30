@@ -5,7 +5,7 @@ import { COLUMN_LABEL, COLUMN_ORDER, EXPERIMENTAL_COLUMN_ORDER } from "@/lib/typ
 import { toExperimentalColumn } from "@/lib/kanban";
 import { PRCard } from "./PRCard";
 import clsx from "clsx";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 const COLLAPSED_KEY = "pr-board-collapsed-repos:v1";
 
@@ -74,11 +74,14 @@ export function Board({
   hiddenColumns,
   showWaitingFor = true,
   experimental = false,
+  corner,
 }: {
   data: BoardData;
   hiddenColumns?: ColumnId[];
   showWaitingFor?: boolean;
   experimental?: boolean;
+  /** Rendered in the header row above the repo column (the app title and controls). */
+  corner?: ReactNode;
 }) {
   // In experimental mode, remap each PR's column to the "whose turn is it"
   // layout; everything downstream reads the (possibly remapped) pr.column.
@@ -111,9 +114,12 @@ export function Board({
 
   if (visibleRepos.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white p-8 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
-        No pull requests found. Try adjusting orgs in settings.
-      </div>
+      <>
+        {corner && <div className="flex h-10 items-center">{corner}</div>}
+        <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white p-8 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
+          No pull requests found. Try adjusting orgs in settings.
+        </div>
+      </>
     );
   }
 
@@ -123,12 +129,15 @@ export function Board({
     <div
       className="grid min-w-[1400px] gap-x-3"
       style={{
-        gridTemplateColumns: `200px repeat(${visibleColumns.length}, minmax(220px, 1fr))`,
+        gridTemplateColumns: `220px repeat(${visibleColumns.length}, minmax(220px, 1fr))`,
       }}
     >
       {/* header row: one sticky subgrid so its background also covers the column gaps */}
-      <div className="sticky top-0 z-10 col-span-full grid grid-cols-subgrid bg-neutral-50 dark:bg-neutral-950">
-        <div />
+      <div className="sticky top-0 z-10 col-span-full grid min-h-10 grid-cols-subgrid items-center bg-neutral-50 dark:bg-neutral-950">
+        {/* pinned left too, so the controls stay reachable when scrolling sideways */}
+        <div className="sticky left-0 z-10 flex h-full items-center bg-neutral-50 dark:bg-neutral-950">
+          {corner}
+        </div>
         {visibleColumns.map((col) => (
           <div
             key={col}

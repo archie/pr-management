@@ -28,6 +28,16 @@ export function Header(props: HeaderProps) {
   );
 }
 
+/** Compact title + controls for the board's header row. "Updated" moves into the refresh tooltip. */
+export function BoardCorner(props: HeaderProps) {
+  return (
+    <div className="flex w-full items-center justify-between gap-2 pl-1">
+      <h1 className="text-sm font-semibold tracking-tight">PR Board</h1>
+      <HeaderControls {...props} />
+    </div>
+  );
+}
+
 export function HeaderControls({
   fetchedAt,
   isFetching,

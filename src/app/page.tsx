@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import clsx from "clsx";
 import { Board } from "@/components/Board";
-import { Header } from "@/components/Header";
+import { BoardCorner, Header, type HeaderProps } from "@/components/Header";
 import { HelpModal } from "@/components/HelpModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ThemeApplier } from "@/components/ThemeApplier";
@@ -33,6 +34,16 @@ export default function Page() {
     refetchInterval: 60_000,
   });
 
+  const headerProps: HeaderProps = {
+    fetchedAt: query.data?.fetchedAt,
+    isFetching: query.isFetching,
+    onRefresh: () => query.refetch(),
+    onOpenHelp: () => setHelpOpen(true),
+    onOpenSettings: () => setSettingsOpen(true),
+  };
+
+  const showBoard = !query.isError && !!query.data;
+
   if (status === "loading") {
     return <CenteredMessage>Loading…</CenteredMessage>;
   }
@@ -44,14 +55,14 @@ export default function Page() {
   return (
     <div className="flex h-screen flex-col">
       <ThemeApplier theme={settings.theme} />
-      <Header
-        fetchedAt={query.data?.fetchedAt}
-        isFetching={query.isFetching}
-        onRefresh={() => query.refetch()}
-        onOpenHelp={() => setHelpOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
-      />
-      <main className="board-scroll flex-1 overflow-auto px-3 pb-3">
+      {/* Once the board renders, the title and controls live in its header row instead. */}
+      {!showBoard && <Header {...headerProps} />}
+      <main
+        className={clsx(
+          "board-scroll flex-1 overflow-auto px-3 pb-3",
+          !showBoard && "pt-3",
+        )}
+      >
         {query.isError ? (
           <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
             Failed to load PRs: {(query.error as Error).message}
@@ -62,6 +73,7 @@ export default function Page() {
             hiddenColumns={settings.showDone ? [] : ["done"]}
             showWaitingFor={settings.showWaitingFor}
             experimental={!settings.classicBoard}
+            corner={<BoardCorner {...headerProps} />}
           />
         ) : (
           <CenteredMessage>Loading pull requests…</CenteredMessage>
