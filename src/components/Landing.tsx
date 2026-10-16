@@ -786,6 +786,7 @@ const MOCK_PRS: PR[] = [
     id: "1",
     number: 1482,
     title: "Add rate limiting to webhook ingestion",
+    author: { login: "sara-k", avatarUrl: "" },
     headRefName: "gxp-2301-rate-limit",
     column: "reviewRequests",
     reviewDecision: "REVIEW_REQUIRED",
@@ -868,6 +869,7 @@ const MOCK_PRS: PR[] = [
     repo: "acme/web",
     number: 831,
     title: "Translate dashboard to Swedish",
+    author: { login: "jonas", avatarUrl: "" },
     headRefName: "i18n/sv",
     column: "reviewRequests",
     checksState: "SUCCESS",
@@ -877,6 +879,7 @@ const MOCK_PRS: PR[] = [
     repo: "acme/infra",
     number: 214,
     title: "Bump Terraform AWS provider",
+    author: { login: "dependabot", avatarUrl: "" },
     column: "reviewRequests",
   }),
   mockPR({

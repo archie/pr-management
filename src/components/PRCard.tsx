@@ -68,6 +68,8 @@ export function PRCard({
   pr: PR;
   showWaitingFor?: boolean;
 }) {
+  // On someone else's PR, who opened it matters more than who else is pending.
+  const showAuthor = pr.column === "reviewRequests";
   const showReviewers =
     showWaitingFor &&
     pr.column !== "reviewRequests" &&
@@ -104,6 +106,17 @@ export function PRCard({
           </span>
         </div>
       </div>
+      {showAuthor && pr.author ? (
+        <div
+          className="mt-1.5 truncate text-[11px] text-neutral-500 dark:text-neutral-400"
+          title={`Opened by @${pr.author.login}`}
+        >
+          by{" "}
+          <span className="text-neutral-700 dark:text-neutral-200">
+            @{pr.author.login}
+          </span>
+        </div>
+      ) : null}
       {showReviewers ? (
         <div
           className="mt-1.5 truncate text-[11px] text-neutral-500 dark:text-neutral-400"
