@@ -111,6 +111,18 @@ export function HelpModal({
           </li>
         </ul>
 
+        <h3 className="mt-5 text-sm font-medium">Search</h3>
+        <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+          Press{" "}
+          <kbd className="rounded border border-neutral-300 px-1 text-xs dark:border-neutral-700">
+            /
+          </kbd>{" "}
+          or the search icon to filter the board by title, #number, branch,
+          or a person who opened or is reviewing a PR. Enter applies the
+          filter; arrow down to a result and press Enter to open that PR
+          instead. Esc closes the search, and Esc again clears the filter.
+        </p>
+
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}

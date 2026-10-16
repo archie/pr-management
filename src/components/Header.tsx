@@ -3,11 +3,15 @@
 import { signOut, useSession } from "next-auth/react";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
+import { SearchIcon } from "./SearchModal";
 
 export interface HeaderProps {
   fetchedAt?: string;
   isFetching: boolean;
   onRefresh: () => void;
+  onOpenSearch: () => void;
+  /** The active board filter, if any; swaps the search icon for a filter one. */
+  filterQuery?: string;
   onOpenHelp: () => void;
   onOpenSettings: () => void;
 }
@@ -32,7 +36,7 @@ export function Header(props: HeaderProps) {
 export function BoardCorner(props: HeaderProps) {
   return (
     <div className="flex w-full items-center justify-between gap-2 pl-1">
-      <h1 className="text-sm font-semibold tracking-tight">PR Board</h1>
+      <h1 className="whitespace-nowrap text-sm font-semibold tracking-tight">PR Board</h1>
       <HeaderControls {...props} />
     </div>
   );
@@ -42,6 +46,8 @@ export function HeaderControls({
   fetchedAt,
   isFetching,
   onRefresh,
+  onOpenSearch,
+  filterQuery,
   onOpenHelp,
   onOpenSettings,
 }: HeaderProps) {
@@ -53,6 +59,19 @@ export function HeaderControls({
 
   return (
     <div className="flex items-center gap-1">
+      {filterQuery ? (
+        <IconButton
+          onClick={onOpenSearch}
+          label={`Filtered by "${filterQuery}" (/ to edit, esc to clear)`}
+          active
+        >
+          <FilterIcon className="h-4 w-4" />
+        </IconButton>
+      ) : (
+        <IconButton onClick={onOpenSearch} label="Search pull requests (/)">
+          <SearchIcon className="h-4 w-4" />
+        </IconButton>
+      )}
       <IconButton onClick={onOpenHelp} label="What the board shows">
         <span className="text-xs font-medium">?</span>
       </IconButton>
@@ -70,10 +89,12 @@ export function HeaderControls({
 function IconButton({
   onClick,
   label,
+  active = false,
   children,
 }: {
   onClick: () => void;
   label: string;
+  active?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -82,7 +103,12 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+      className={clsx(
+        "flex h-7 w-7 items-center justify-center rounded-md",
+        active
+          ? "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900"
+          : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100",
+      )}
     >
       {children}
     </button>
@@ -164,6 +190,20 @@ export function RefreshIcon({ className }: { className?: string }) {
     >
       <path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" />
       <path d="M16.5 3.5v3.5H13" />
+    </svg>
+  );
+}
+
+export function FilterIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h11A1.5 1.5 0 0 1 17 4.5v.9a1.5 1.5 0 0 1-.44 1.06L12 11v4.38a1 1 0 0 1-.55.9l-2 1A1 1 0 0 1 8 16.38V11L3.44 6.46A1.5 1.5 0 0 1 3 5.4v-.9Z" />
     </svg>
   );
 }

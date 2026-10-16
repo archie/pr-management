@@ -75,6 +75,7 @@ export function Board({
   showWaitingFor = true,
   experimental = false,
   corner,
+  emptyMessage = "No pull requests found. Try adjusting orgs in settings.",
 }: {
   data: BoardData;
   hiddenColumns?: ColumnId[];
@@ -82,6 +83,8 @@ export function Board({
   experimental?: boolean;
   /** Rendered in the header row above the repo column (the app title and controls). */
   corner?: ReactNode;
+  /** Shown instead of the board when no PRs are visible. */
+  emptyMessage?: ReactNode;
 }) {
   // In experimental mode, remap each PR's column to the "whose turn is it"
   // layout; everything downstream reads the (possibly remapped) pr.column.
@@ -117,7 +120,7 @@ export function Board({
       <>
         {corner && <div className="flex h-10 items-center">{corner}</div>}
         <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white p-8 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
-          No pull requests found. Try adjusting orgs in settings.
+          {emptyMessage}
         </div>
       </>
     );

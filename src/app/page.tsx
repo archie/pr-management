@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { Board } from "@/components/Board";
 import { BoardCorner, Header, type HeaderProps } from "@/components/Header";
 import { HelpModal } from "@/components/HelpModal";
+import { FilterPill, SearchModal, useBoardSearch } from "@/components/SearchModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ThemeApplier } from "@/components/ThemeApplier";
 import { useSettings } from "@/hooks/useSettings";
@@ -34,10 +35,14 @@ export default function Page() {
     refetchInterval: 60_000,
   });
 
+  const search = useBoardSearch(query.data?.prs ?? [], helpOpen || settingsOpen);
+
   const headerProps: HeaderProps = {
     fetchedAt: query.data?.fetchedAt,
     isFetching: query.isFetching,
     onRefresh: () => query.refetch(),
+    onOpenSearch: search.openSearch,
+    filterQuery: search.isFiltering ? search.query.trim() : undefined,
     onOpenHelp: () => setHelpOpen(true),
     onOpenSettings: () => setSettingsOpen(true),
   };
@@ -69,7 +74,12 @@ export default function Page() {
           </div>
         ) : query.data ? (
           <Board
-            data={query.data}
+            data={{ ...query.data, prs: search.filteredPRs }}
+            emptyMessage={
+              search.isFiltering
+                ? `No pull requests match "${search.query.trim()}".`
+                : undefined
+            }
             hiddenColumns={settings.showDone ? [] : ["done"]}
             showWaitingFor={settings.showWaitingFor}
             experimental={!settings.classicBoard}
@@ -79,6 +89,22 @@ export default function Page() {
           <CenteredMessage>Loading pull requests…</CenteredMessage>
         )}
       </main>
+      <SearchModal
+        open={search.open}
+        onClose={search.closeSearch}
+        query={search.query}
+        onQueryChange={search.setQuery}
+        prs={query.data?.prs ?? []}
+        experimental={!settings.classicBoard}
+      />
+      {search.isFiltering && !search.open && (
+        <FilterPill
+          query={search.query}
+          count={search.filteredPRs.length}
+          onEdit={search.openSearch}
+          onClear={search.clear}
+        />
+      )}
       <HelpModal
         open={helpOpen}
         onClose={() => setHelpOpen(false)}
