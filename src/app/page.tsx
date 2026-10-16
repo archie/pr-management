@@ -8,6 +8,8 @@ import { Board } from "@/components/Board";
 import { BoardCorner, Header, type HeaderProps } from "@/components/Header";
 import { HelpModal } from "@/components/HelpModal";
 import { FilterPill, SearchModal, useBoardSearch } from "@/components/SearchModal";
+import { Toast, useToast } from "@/components/Toast";
+import { useHotkeys } from "@/hooks/useHotkeys";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ThemeApplier } from "@/components/ThemeApplier";
 import { useSettings } from "@/hooks/useSettings";
@@ -37,12 +39,29 @@ export default function Page() {
 
   const search = useBoardSearch(query.data?.prs ?? [], helpOpen || settingsOpen);
 
+  const toast = useToast();
+  const anyModalOpen = helpOpen || settingsOpen || search.open;
+  useHotkeys(
+    {
+      r: () => {
+        void query.refetch();
+      },
+      "?": () => setHelpOpen(true),
+      d: () => {
+        const showDone = !settings.showDone;
+        update({ ...settings, showDone });
+        toast.show(showDone ? "Showing Done" : "Hiding Done");
+      },
+    },
+    !anyModalOpen,
+  );
+
   const headerProps: HeaderProps = {
     fetchedAt: query.data?.fetchedAt,
     isFetching: query.isFetching,
     onRefresh: () => query.refetch(),
     onOpenSearch: search.openSearch,
-    filterQuery: search.isFiltering ? search.query.trim() : undefined,
+    filterLabel: search.isFiltering ? search.label : undefined,
     onOpenHelp: () => setHelpOpen(true),
     onOpenSettings: () => setSettingsOpen(true),
   };
@@ -77,11 +96,13 @@ export default function Page() {
             data={{ ...query.data, prs: search.filteredPRs }}
             emptyMessage={
               search.isFiltering
-                ? `No pull requests match "${search.query.trim()}".`
+                ? `No pull requests match ${search.label}.`
                 : undefined
             }
             hiddenColumns={settings.showDone ? [] : ["done"]}
             showWaitingFor={settings.showWaitingFor}
+            shortcutsEnabled={!anyModalOpen}
+            onNotify={toast.show}
             experimental={!settings.classicBoard}
             corner={<BoardCorner {...headerProps} />}
           />
@@ -94,17 +115,19 @@ export default function Page() {
         onClose={search.closeSearch}
         query={search.query}
         onQueryChange={search.setQuery}
-        prs={query.data?.prs ?? []}
+        prs={search.scopedPRs}
         experimental={!settings.classicBoard}
       />
       {search.isFiltering && !search.open && (
         <FilterPill
           query={search.query}
+          reviewOnly={search.reviewOnly}
           count={search.filteredPRs.length}
           onEdit={search.openSearch}
           onClear={search.clear}
         />
       )}
+      <Toast message={toast.message} />
       <HelpModal
         open={helpOpen}
         onClose={() => setHelpOpen(false)}

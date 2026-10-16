@@ -3,9 +3,10 @@
 import type { BoardData, ColumnId, PR } from "@/lib/types";
 import { COLUMN_LABEL, COLUMN_ORDER, EXPERIMENTAL_COLUMN_ORDER } from "@/lib/types";
 import { toExperimentalColumn } from "@/lib/kanban";
+import { useHotkeys } from "@/hooks/useHotkeys";
 import { PRCard } from "./PRCard";
 import clsx from "clsx";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 const COLLAPSED_KEY = "pr-board-collapsed-repos:v1";
 
@@ -40,7 +41,23 @@ function useCollapsedRepos() {
     });
   }, []);
 
-  return { collapsed, toggle };
+  const setMany = useCallback((repos: string[], collapse: boolean) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      for (const r of repos) {
+        if (collapse) next.add(r);
+        else next.delete(r);
+      }
+      try {
+        window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]));
+      } catch {
+        // ignore; the change still applies for this session
+      }
+      return next;
+    });
+  }, []);
+
+  return { collapsed, toggle, setMany };
 }
 
 function bucketize(prs: PR[]) {
@@ -76,6 +93,8 @@ export function Board({
   experimental = false,
   corner,
   emptyMessage = "No pull requests found. Try adjusting orgs in settings.",
+  shortcutsEnabled = true,
+  onNotify,
 }: {
   data: BoardData;
   hiddenColumns?: ColumnId[];
@@ -85,6 +104,10 @@ export function Board({
   corner?: ReactNode;
   /** Shown instead of the board when no PRs are visible. */
   emptyMessage?: ReactNode;
+  /** Card shortcuts (j/k, enter, c, [ ]) are live; off while a modal is open. */
+  shortcutsEnabled?: boolean;
+  /** Short confirmation for keyboard actions, e.g. a copied link. */
+  onNotify?: (message: string) => void;
 }) {
   // In experimental mode, remap each PR's column to the "whose turn is it"
   // layout; everything downstream reads the (possibly remapped) pr.column.
@@ -113,7 +136,16 @@ export function Board({
     for (const p of prs) counts.set(p.column, (counts.get(p.column) ?? 0) + 1);
     return counts;
   }, [prs]);
-  const { collapsed, toggle } = useCollapsedRepos();
+  const { collapsed, toggle, setMany } = useCollapsedRepos();
+  const selection = useCardSelection({
+    buckets,
+    columns: visibleColumns,
+    repos: visibleRepos,
+    collapsed,
+    setCollapsed: setMany,
+    enabled: shortcutsEnabled,
+    onNotify,
+  });
 
   if (visibleRepos.length === 0) {
     return (
@@ -168,6 +200,7 @@ export function Board({
             showWaitingFor={showWaitingFor}
             collapsed={collapsed.has(repo)}
             onToggle={() => toggle(repo)}
+            selectedId={selection.selectedId}
           />
         );
       })}
@@ -182,6 +215,7 @@ function RepoRow({
   showWaitingFor,
   collapsed,
   onToggle,
+  selectedId,
 }: {
   repo: string;
   inner: Map<ColumnId, PR[]>;
@@ -189,6 +223,7 @@ function RepoRow({
   showWaitingFor: boolean;
   collapsed: boolean;
   onToggle: () => void;
+  selectedId: string | null;
 }) {
   const total = columns.reduce((n, col) => n + (inner.get(col)?.length ?? 0), 0);
   return (
@@ -248,6 +283,7 @@ function RepoRow({
                 key={pr.id}
                 pr={pr}
                 showWaitingFor={showWaitingFor}
+                selected={pr.id === selectedId}
               />
             ))}
           </div>
@@ -255,6 +291,120 @@ function RepoRow({
       })}
     </>
   );
+}
+
+/**
+ * Keyboard selection of a single card. j/k walk the cards top to bottom down
+ * each column (across repo rows), then on to the next column; enter or o opens
+ * the selected PR, c copies its link. [ and ] collapse or expand the selected
+ * card's repo, or every repo when nothing is selected. Esc deselects.
+ */
+function useCardSelection({
+  buckets,
+  columns,
+  repos,
+  collapsed,
+  setCollapsed,
+  enabled,
+  onNotify,
+}: {
+  buckets: Map<string, Map<ColumnId, PR[]>>;
+  columns: ColumnId[];
+  repos: string[];
+  collapsed: Set<string>;
+  setCollapsed: (repos: string[], collapse: boolean) => void;
+  enabled: boolean;
+  onNotify?: (message: string) => void;
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The selected PR itself, so [ ] and c still work while its repo is collapsed.
+  const selectedRef = useRef<PR | null>(null);
+
+  const order = useMemo(() => {
+    const cards: PR[] = [];
+    for (const col of columns) {
+      for (const repo of repos) {
+        if (collapsed.has(repo)) continue;
+        cards.push(...(buckets.get(repo)?.get(col) ?? []));
+      }
+    }
+    return cards;
+  }, [buckets, columns, repos, collapsed]);
+
+  const allPRs = useMemo(
+    () =>
+      [...buckets.values()].flatMap((inner) => [...inner.values()].flat()),
+    [buckets],
+  );
+  // Drop the selection once its PR is gone (filtered out or no longer open).
+  const selected = allPRs.find((p) => p.id === selectedId) ?? null;
+  selectedRef.current = selected;
+
+  useEffect(() => {
+    if (!selectedId) return;
+    document
+      .querySelector(`[data-pr-id="${selectedId}"]`)
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selectedId]);
+
+  const move = (step: 1 | -1) => {
+    if (order.length === 0) return;
+    const i = order.findIndex((p) => p.id === selectedId);
+    const next =
+      i === -1
+        ? step === 1
+          ? 0
+          : order.length - 1
+        : Math.min(Math.max(i + step, 0), order.length - 1);
+    setSelectedId(order[next].id);
+  };
+
+  const open = (e: KeyboardEvent) => {
+    // A focused link or button already handles Enter natively.
+    const el = e.target as HTMLElement | null;
+    if (e.key === "Enter" && (el?.tagName === "A" || el?.tagName === "BUTTON")) {
+      return false;
+    }
+    const pr = selectedRef.current;
+    if (!pr) return false;
+    window.open(pr.url, "_blank", "noopener,noreferrer");
+  };
+
+  const copy = () => {
+    const pr = selectedRef.current;
+    if (!pr) {
+      onNotify?.("Select a PR with j/k first");
+      return;
+    }
+    navigator.clipboard.writeText(pr.url).then(
+      () => onNotify?.(`Copied link to #${pr.number}`),
+      () => onNotify?.("Couldn't copy the link"),
+    );
+  };
+
+  const collapse = (collapse: boolean) => {
+    const pr = selectedRef.current;
+    setCollapsed(pr ? [pr.repo] : repos, collapse);
+  };
+
+  useHotkeys(
+    {
+      j: () => move(1),
+      k: () => move(-1),
+      Enter: open,
+      o: open,
+      c: copy,
+      "[": () => collapse(true),
+      "]": () => collapse(false),
+      Escape: () => {
+        if (!selectedId) return false;
+        setSelectedId(null);
+      },
+    },
+    enabled,
+  );
+
+  return { selectedId: selected?.id ?? null };
 }
 
 export function ChevronIcon({ className }: { className?: string }) {

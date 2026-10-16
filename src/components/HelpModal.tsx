@@ -6,7 +6,21 @@ import {
   COLUMN_ORDER,
   EXPERIMENTAL_COLUMN_ORDER,
 } from "@/lib/types";
+import { useHotkeys } from "@/hooks/useHotkeys";
 import { ChecksDot, ConflictBadge, ReviewBadge } from "./PRCard";
+
+const SHORTCUTS: { keys: string[]; action: string }[] = [
+  { keys: ["/"], action: "Search and filter the board" },
+  { keys: ["m"], action: "Show only PRs waiting on your review" },
+  { keys: ["esc"], action: "Close the search, then clear the filter and selection" },
+  { keys: ["j", "k"], action: "Select the next or previous card" },
+  { keys: ["enter", "o"], action: "Open the selected PR" },
+  { keys: ["c"], action: "Copy the selected PR's link" },
+  { keys: ["[", "]"], action: "Collapse or expand the selected card's repo (all repos if none)" },
+  { keys: ["d"], action: "Show or hide the Done column" },
+  { keys: ["r"], action: "Refresh" },
+  { keys: ["?"], action: "Open this help" },
+];
 
 export function HelpModal({
   open,
@@ -17,6 +31,7 @@ export function HelpModal({
   onClose: () => void;
   experimental: boolean;
 }) {
+  useHotkeys({ Escape: onClose, "?": onClose }, open);
   if (!open) return null;
 
   const columns = experimental ? EXPERIMENTAL_COLUMN_ORDER : COLUMN_ORDER;
@@ -111,17 +126,29 @@ export function HelpModal({
           </li>
         </ul>
 
-        <h3 className="mt-5 text-sm font-medium">Search</h3>
+        <h3 className="mt-5 text-sm font-medium">Keyboard shortcuts</h3>
         <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-          Press{" "}
-          <kbd className="rounded border border-neutral-300 px-1 text-xs dark:border-neutral-700">
-            /
-          </kbd>{" "}
-          or the search icon to filter the board by title, #number, branch,
-          or a person who opened or is reviewing a PR. Enter applies the
-          filter; arrow down to a result and press Enter to open that PR
-          instead. Esc closes the search, and Esc again clears the filter.
+          Search matches title, #number, branch, repo, and anyone who opened or
+          is reviewing a PR. In the search, Enter applies the filter; arrow
+          down to a result first to open that PR instead.
         </p>
+        <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+          {SHORTCUTS.map(({ keys, action }) => (
+            <div key={action} className="contents">
+              <dt className="flex items-start gap-1">
+                {keys.map((k) => (
+                  <kbd
+                    key={k}
+                    className="min-w-[1.5rem] rounded border border-neutral-300 px-1 text-center text-xs dark:border-neutral-700"
+                  >
+                    {k}
+                  </kbd>
+                ))}
+              </dt>
+              <dd className="text-neutral-700 dark:text-neutral-300">{action}</dd>
+            </div>
+          ))}
+        </dl>
 
         <div className="mt-5 flex justify-end">
           <button

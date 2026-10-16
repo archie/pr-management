@@ -64,9 +64,12 @@ export function ReviewBadge({ decision }: { decision: PR["reviewDecision"] }) {
 export function PRCard({
   pr,
   showWaitingFor = true,
+  selected = false,
 }: {
   pr: PR;
   showWaitingFor?: boolean;
+  /** Picked with the j/k keyboard shortcuts. */
+  selected?: boolean;
 }) {
   // On someone else's PR, who opened it matters more than who else is pending.
   const showAuthor = pr.column === "reviewRequests";
@@ -80,8 +83,12 @@ export function PRCard({
       href={pr.url}
       target="_blank"
       rel="noopener noreferrer"
+      data-pr-id={pr.id}
+      aria-current={selected || undefined}
       className={clsx(
-        "group block rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm transition",
+        // scroll-mt clears the sticky column header when j/k scroll a card into view.
+        "group block scroll-mt-14 rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm transition",
+        selected && "ring-2 ring-blue-500 ring-offset-1 ring-offset-neutral-50 dark:ring-offset-neutral-950",
         "hover:border-neutral-300 hover:shadow",
         "dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700",
       )}

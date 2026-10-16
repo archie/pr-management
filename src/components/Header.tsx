@@ -10,8 +10,8 @@ export interface HeaderProps {
   isFetching: boolean;
   onRefresh: () => void;
   onOpenSearch: () => void;
-  /** The active board filter, if any; swaps the search icon for a filter one. */
-  filterQuery?: string;
+  /** Describes the active board filter, if any; swaps the search icon for a filter one. */
+  filterLabel?: string;
   onOpenHelp: () => void;
   onOpenSettings: () => void;
 }
@@ -47,7 +47,7 @@ export function HeaderControls({
   isFetching,
   onRefresh,
   onOpenSearch,
-  filterQuery,
+  filterLabel,
   onOpenHelp,
   onOpenSettings,
 }: HeaderProps) {
@@ -59,10 +59,10 @@ export function HeaderControls({
 
   return (
     <div className="flex items-center gap-1">
-      {filterQuery ? (
+      {filterLabel ? (
         <IconButton
           onClick={onOpenSearch}
-          label={`Filtered by "${filterQuery}" (/ to edit, esc to clear)`}
+          label={`Filtered by ${filterLabel} (/ to edit, esc to clear)`}
           active
         >
           <FilterIcon className="h-4 w-4" />
@@ -72,10 +72,10 @@ export function HeaderControls({
           <SearchIcon className="h-4 w-4" />
         </IconButton>
       )}
-      <IconButton onClick={onOpenHelp} label="What the board shows">
+      <IconButton onClick={onOpenHelp} label="What the board shows (?)">
         <span className="text-xs font-medium">?</span>
       </IconButton>
-      <IconButton onClick={onRefresh} label={refreshTitle}>
+      <IconButton onClick={onRefresh} label={`${refreshTitle} (r)`}>
         <RefreshIcon className={clsx("h-4 w-4", isFetching && "animate-spin")} />
       </IconButton>
       <IconButton onClick={onOpenSettings} label="Settings">

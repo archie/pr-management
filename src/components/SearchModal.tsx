@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "@/hooks/useHotkeys";
 import { toExperimentalColumn } from "@/lib/kanban";
 import { highlightSegments, matchesSearch, searchTerms } from "@/lib/search";
 import {
@@ -12,60 +13,66 @@ import {
 } from "@/lib/types";
 import { ChecksDot, ReviewBadge } from "./PRCard";
 
-function isTyping(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false;
-  return (
-    el.isContentEditable ||
-    el.tagName === "INPUT" ||
-    el.tagName === "TEXTAREA" ||
-    el.tagName === "SELECT"
-  );
-}
-
 /**
- * The board's search filter. The query is shared by the modal and the board:
- * typing in the modal filters the board live, and the filter stays applied
- * after the modal closes until it's cleared.
+ * The board's filter: a text query plus an optional "only my review requests"
+ * scope. Typing in the modal filters the board live, and the filter stays
+ * applied after the modal closes until it's cleared.
  *
- * Keys: "/" opens the modal. Esc closes the modal, or, with the modal closed,
- * clears the filter. `otherModalOpen` keeps both keys out of the way while the
- * Help or Settings modal is up.
+ * Keys: "/" opens the modal, "m" toggles the review-requests scope, and Esc
+ * closes the modal or, with the modal closed, clears the whole filter.
+ * `otherModalOpen` keeps them out of the way while Help or Settings is up.
  */
 export function useBoardSearch(prs: PR[], otherModalOpen: boolean) {
   const [query, setQuery] = useState("");
+  const [reviewOnly, setReviewOnly] = useState(false);
   const [open, setOpen] = useState(false);
   const terms = useMemo(() => searchTerms(query), [query]);
-  const filteredPRs = useMemo(
-    () => (terms.length ? prs.filter((p) => matchesSearch(p, terms)) : prs),
-    [prs, terms],
+  const scopedPRs = useMemo(
+    () => (reviewOnly ? prs.filter((p) => p.column === "reviewRequests") : prs),
+    [prs, reviewOnly],
   );
+  const filteredPRs = useMemo(
+    () =>
+      terms.length ? scopedPRs.filter((p) => matchesSearch(p, terms)) : scopedPRs,
+    [scopedPRs, terms],
+  );
+  const isFiltering = reviewOnly || terms.length > 0;
+  const clear = useCallback(() => {
+    setQuery("");
+    setReviewOnly(false);
+  }, []);
 
-  useEffect(() => {
-    if (otherModalOpen || open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
-      if (e.key === "/") {
-        e.preventDefault();
-        setOpen(true);
-      } else if (e.key === "Escape" && query) {
-        setQuery("");
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [otherModalOpen, open, query]);
+  useHotkeys(
+    {
+      "/": () => setOpen(true),
+      m: () => setReviewOnly((v) => !v),
+      Escape: () => (isFiltering ? clear() : false),
+    },
+    !otherModalOpen && !open,
+  );
 
   return {
     query,
     setQuery,
+    reviewOnly,
     open,
     openSearch: useCallback(() => setOpen(true), []),
     closeSearch: useCallback(() => setOpen(false), []),
-    clear: useCallback(() => setQuery(""), []),
-    /** All PRs when the query is empty, otherwise the matching ones. */
+    clear,
+    /** What the search modal searches: every PR, or only review requests. */
+    scopedPRs,
+    /** What the board shows: `scopedPRs` narrowed by the query. */
     filteredPRs,
-    isFiltering: terms.length > 0,
+    isFiltering,
+    /** Short description of the active filter, e.g. `review requests matching "leslie"`. */
+    label: describeFilter(query.trim(), reviewOnly),
   };
+}
+
+function describeFilter(query: string, reviewOnly: boolean): string {
+  if (reviewOnly && query) return `your review requests matching "${query}"`;
+  if (reviewOnly) return "your review requests";
+  return `"${query}"`;
 }
 
 export function SearchModal({
@@ -230,15 +237,25 @@ function SearchPanel({
 /** Floating reminder that the board is filtered, with a way back into the search. */
 export function FilterPill({
   query,
+  reviewOnly,
   count,
   onEdit,
   onClear,
 }: {
   query: string;
+  reviewOnly: boolean;
   count: number;
   onEdit: () => void;
   onClear: () => void;
 }) {
+  const q = query.trim();
+  const noun = reviewOnly
+    ? count === 1
+      ? "review request"
+      : "review requests"
+    : count === 1
+      ? "PR"
+      : "PRs";
   return (
     <div className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-neutral-200 bg-white py-1 pl-3 pr-1 text-xs shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
       <button
@@ -248,10 +265,18 @@ export function FilterPill({
       >
         <SearchIcon className="h-3.5 w-3.5" />
         <span>
-          {count} {count === 1 ? "PR matches" : "PRs match"}{" "}
-          <span className="font-medium text-neutral-900 dark:text-neutral-100">
-            &ldquo;{query.trim()}&rdquo;
-          </span>
+          {count} {noun}
+          {q ? (
+            <>
+              {" "}
+              {count === 1 ? "matches" : "match"}{" "}
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                &ldquo;{q}&rdquo;
+              </span>
+            </>
+          ) : (
+            " waiting on you"
+          )}
         </span>
       </button>
       <button
